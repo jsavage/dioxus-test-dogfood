@@ -19,12 +19,13 @@ jobs:
   dogfood-test:
     name: Run Setup Script and Commit Output
     runs-on: ubuntu-22.04
-      - name Specify OS
-        run: echo "Running on Ubuntu 22.04"
     permissions:
       contents: write
-    
     steps:
+      - name: Specify OS
+        run: echo "Running on Ubuntu 22.04"
+      - name: Run setup script
+        run: ./setup-dioxus-test.sh
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
