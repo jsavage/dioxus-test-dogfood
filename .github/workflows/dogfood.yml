@@ -1,4 +1,4 @@
-name: Dogfood Test - Run Setup Script
+name: Dogfood Test - Includes Running Setup Script
 
 on:
   push:
