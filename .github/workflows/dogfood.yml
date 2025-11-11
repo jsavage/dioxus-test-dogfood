@@ -1,14 +1,165 @@
-name: Test Workflow
+# Build script you'd run locally before uploading
+import subprocess
+import shutil
+from pathlib import Path
 
-on:
-  workflow_dispatch:
+def build_wasm():
+    """Build Dioxus app for web deployment"""
+    
+    # Install dx CLI if not already installed
+    subprocess.run(["cargo", "install", "dioxus-cli"], check=False)
+    
+    # Build for web
+    print("Building Dioxus app for web...")
+    result = subprocess.run(
+        ["dx", "build", "--release", "--platform", "web"],
+        cwd="path/to/your/dioxus/project",
+        capture_output=True,
+        text=True
+    )
+    
+    if result.returncode != 0:
+        print(f"Build failed: {result.stderr}")
+        return False
+    
+    print("Build successful!")
+    
+    # The output will be in dist/ folder
+    dist_path = Path("path/to/your/dioxus/project/dist")
+    
+    if dist_path.exists():
+        print(f"Static files ready in: {dist_path}")
+        print("Upload contents to your shared hosting public_html folder")
+        return True
+    
+    return False
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Echo test
-        run: echo "Hello World"
+if __name__ == "__main__":
+    build_wasm()
+Then upload the dist/ folder contents to your HelioHost public_html directory via FTP/SFTP or Plesk File Manager.
+Option 2: Deploy Server-Side (Requires VPS)
+For a true Dioxus webserver deployment, you'll need a VPS (Virtual Private Server) instead of shared hosting. Here's how you'd deploy:
+python#!/usr/bin/env python3
+"""
+Deployment script for Dioxus Rust app on a VPS
+Run this on your LOCAL machine to deploy to remote server
+"""
+
+import subprocess
+import sys
+from pathlib import Path
+
+# Configuration
+REMOTE_HOST = "your-vps-ip-or-domain"
+REMOTE_USER = "your-username"
+REMOTE_PATH = "/home/your-username/depict"
+APP_NAME = "depict"
+APP_PORT = 8080
+
+def run_command(cmd, description):
+    """Run a command and handle errors"""
+    print(f"\n{'='*60}")
+    print(f"{description}")
+    print(f"{'='*60}")
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    print(result.stdout)
+    if result.returncode != 0:
+        print(f"Error: {result.stderr}", file=sys.stderr)
+        return False
+    return True
+
+def main():
+    """Deploy Dioxus app to VPS"""
+    
+    # 1. Build locally for the target platform
+    print("Step 1: Building application...")
+    if not run_command(
+        "cargo build --release --target x86_64-unknown-linux-gnu",
+        "Building Rust binary for Linux x86_64"
+    ):
+        return
+    
+    # 2. Copy binary to remote server
+    print("\nStep 2: Copying binary to server...")
+    binary_path = f"target/x86_64-unknown-linux-gnu/release/{APP_NAME}"
+    if not run_command(
+        f"scp {binary_path} {REMOTE_USER}@{REMOTE_HOST}:{REMOTE_PATH}/{APP_NAME}",
+        "Copying binary via SCP"
+    ):
+        return
+    
+    # 3. Copy static assets if any
+    print("\nStep 3: Copying static assets...")
+    run_command(
+        f"scp -r assets {REMOTE_USER}@{REMOTE_HOST}:{REMOTE_PATH}/",
+        "Copying assets directory"
+    )
+    
+    # 4. Create systemd service file
+    systemd_service = f"""[Unit]
+Description=Depict Dioxus Web Application
+After=network.target
+
+[Service]
+Type=simple
+User={REMOTE_USER}
+WorkingDirectory={REMOTE_PATH}
+ExecStart={REMOTE_PATH}/{APP_NAME}
+Restart=always
+RestartSec=10
+Environment="RUST_LOG=info"
+Environment="PORT={APP_PORT}"
+
+[Install]
+WantedBy=multi-user.target
+"""
+    
+    # Save service file locally
+    with open(f"{APP_NAME}.service", "w") as f:
+        f.write(systemd_service)
+    
+    print("\nStep 4: Setting up systemd service...")
+    commands = [
+        f"scp {APP_NAME}.service {REMOTE_USER}@{REMOTE_HOST}:/tmp/",
+        f"ssh {REMOTE_USER}@{REMOTE_HOST} 'sudo mv /tmp/{APP_NAME}.service /etc/systemd/system/'",
+        f"ssh {REMOTE_USER}@{REMOTE_HOST} 'sudo systemctl daemon-reload'",
+        f"ssh {REMOTE_USER}@{REMOTE_HOST} 'sudo systemctl enable {APP_NAME}'",
+        f"ssh {REMOTE_USER}@{REMOTE_HOST} 'sudo systemctl restart {APP_NAME}'",
+    ]
+    
+    for cmd in commands:
+        run_command(cmd, f"Executing: {cmd.split()[-1]}")
+    
+    # 5. Setup nginx reverse proxy
+    nginx_config = f"""server {{
+    listen 80;
+    server_name your-domain.com;
+    
+    location / {{
+        proxy_pass http://localhost:{APP_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }}
+}}"""
+    
+    with open(f"{APP_NAME}.nginx", "w") as f:
+        f.write(nginx_config)
+    
+    print("\nStep 5: Setting up Nginx reverse proxy...")
+    print(f"Nginx config created: {APP_NAME}.nginx")
+    print("You'll need to manually copy this to /etc/nginx/sites-available/")
+    
+    print("\n" + "="*60)
+    print("Deployment complete!")
+    print(f"Your app should be running on port {APP_PORT}")
+    print("Check status with: sudo systemctl status depict")
+    print("View logs with: sudo journalctl -u depict -f")
+    print("="*60)
+
+if __name__ == "__main__":
+    main()
