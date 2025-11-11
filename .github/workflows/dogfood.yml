@@ -15,12 +15,12 @@ on:
   push:
     branches: [ main, master ]
     paths:
-      - 'setup-dioxus-test.sh'  # Only run when setup script changes
+      - 'setup-dioxus-test.sh'
   pull_request:
     branches: [ main, master ]
     paths:
       - 'setup-dioxus-test.sh'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   dogfood-test:
