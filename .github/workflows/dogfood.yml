@@ -23,7 +23,7 @@ jobs:
       contents: write
     steps:
       - name: Specify OS
-        run: echo "Running on Ubuntu 22.04"
+        run: echo "Running on UBUNTU 22.04"
       - name: Run setup script
         run: ./setup-dioxus-test.sh
       - name: Checkout repository
