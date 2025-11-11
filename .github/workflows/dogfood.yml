@@ -13,11 +13,15 @@ name: Dogfood Test - Run Setup Script
 
 on:
   push:
-    branches: [ main, master ]
+    branches: 
+      - main
+      - master
     paths:
       - 'setup-dioxus-test.sh'
   pull_request:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
     paths:
       - 'setup-dioxus-test.sh'
   workflow_dispatch:
