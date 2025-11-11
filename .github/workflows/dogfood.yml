@@ -14,15 +14,7 @@ on:
     paths:
       - 'setup-dioxus-test.sh'
   workflow_dispatch:
-jobs:
-  dogfood-test:
-    name: Run Setup Script and Commit Output
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Specify OS
-        run: echo "Running on Ubuntu 22.04"
-      - name: Run setup script
-        run: ./setup-dioxus-test.sh
+
 jobs:
   dogfood-test:
     name: Run Setup Script and Commit Output
