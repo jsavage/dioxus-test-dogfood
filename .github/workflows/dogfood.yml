@@ -7,27 +7,25 @@ on:
       - master
     paths:
       - 'setup-dioxus-test.sh'
-      - '.github/workflows/dogfood.yml'  # Add this line to trigger on workflow file changes
+      - '.github/workflows/dogfood.yml'
   pull_request:
     branches:
       - main
       - master
     paths:
       - 'setup-dioxus-test.sh'
-      - '.github/workflows/dogfood.yml'  # Add this here as well
+      - '.github/workflows/dogfood.yml'
   workflow_dispatch:
 
 jobs:
   dogfood-test:
     name: Run Setup Script and Commit Output
     runs-on: ubuntu-22.04
+    
     permissions:
       contents: write
+    
     steps:
-      - name: Specify OS
-        run: echo "Running on UBUNTU 22.04"
-      - name: Run setup script
-        run: ./setup-dioxus-test.sh
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -43,18 +41,17 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/
-            ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-dx-v3-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-dx-v3-
       
       - name: Install Dioxus CLI
         run: |
           if ! command -v dx &> /dev/null; then
-            echo "Installing Dioxus CLI..."
-            cargo install dioxus-cli
+            echo "Installing Dioxus CLI v0.6.0..."
+            cargo install dioxus-cli --version 0.6.0 --locked
           else
             echo "Dioxus CLI already cached: $(dx --version)"
           fi
@@ -271,7 +268,7 @@ jobs:
 
   verify-generated-project:
     name: Verify Generated Project Can Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: dogfood-test
     
     steps:
@@ -303,7 +300,7 @@ jobs:
       
       - name: Install Dioxus CLI
         if: success()
-        run: cargo install dioxus-cli
+        run: cargo install dioxus-cli --version 0.6.0 --locked
       
       - name: Build generated project independently
         if: success()
@@ -329,3 +326,4 @@ jobs:
           name: verified-independent-build
           path: generated-project/target/dx/dioxus-test/release/web/public/
           retention-days: 7
+EOF
