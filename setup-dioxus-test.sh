@@ -112,6 +112,7 @@ edition = "2021"
 
 [dependencies]
 dioxus = { version = "0.7", features = ["web"] }
+wasm-bindgen = "=0.2.97"
 
 [profile.release]
 opt-level = "z"     # Optimize for size
