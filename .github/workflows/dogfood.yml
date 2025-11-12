@@ -7,12 +7,14 @@ on:
       - master
     paths:
       - 'setup-dioxus-test.sh'
+      - '.github/workflows/dogfood.yml'  # Add this line to trigger on workflow file changes
   pull_request:
     branches:
       - main
       - master
     paths:
       - 'setup-dioxus-test.sh'
+      - '.github/workflows/dogfood.yml'  # Add this here as well
   workflow_dispatch:
 
 jobs:
