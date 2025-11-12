@@ -1,6 +1,8 @@
 # Dioxus Test App - Dogfooding Repository
 
-This repository demonstrates a "dogfooding" approach: the setup script generates a complete Dioxus project, which is automatically committed back to this repository.
+This repository demonstrates a "dogfooding" approach: There is a workflow file whos action is triggered whenever changed are committed to either the setup script or the workflow file.
+The setup script generates a complete Dioxus project, which is automatically committed back to this repository and can be cloned to a server for testing or deployment.
+Perfect for testing a webserver if you want to check the feasibility of deploying a dioxus project and are not sure how it works. 
 
 ## 🚀 Quick Start
 
