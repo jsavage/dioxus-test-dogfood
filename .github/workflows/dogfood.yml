@@ -326,4 +326,3 @@ jobs:
           name: verified-independent-build
           path: generated-project/target/dx/dioxus-test/release/web/public/
           retention-days: 7
-EOF
